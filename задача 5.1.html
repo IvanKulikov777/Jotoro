@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Движение квадрата по кругу</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: white;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            font-weight: 300;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .controls {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .control-group {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .control-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #ecf0f1;
+        }
+
+        input[type="range"] {
+            width: 200px;
+            height: 8px;
+            -webkit-appearance: none;
+            background: linear-gradient(90deg, #ff6b6b, #4ecdc4);
+            border-radius: 10px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .value-display {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            min-width: 60px;
+        }
+
+        .button-group {
+            margin: 20px 0;
+        }
+
+        button {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a52);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .animation-area {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin: 0 auto;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        #moving-square {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4);
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+            transition: transform 0.1s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .trail {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(78, 205, 196, 0.6);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .center-point {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #fff;
+            border-radius: 50%;
+            top: 195px;
+            left: 195px;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .info-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-size: 0.9em;
+        }
+
+        .coordinates {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+
+        .coordinate {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            border-radius: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .animation-area {
+                width: 300px;
+                height: 300px;
+            }
+            
+            .control-group {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Движение квадрата по кругу</h1>
+            <p>Параметрические уравнения: x = R·cos(θ), y = R·sin(θ)</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <div>
+                    <div class="control-label">Радиус круга:</div>
+                    <input type="range" id="radius" min="50" max="180" value="150">
+                    <div class="value-display" id="radius-value">150px</div>
+                </div>
+                <div>
+                    <div class="control-label">Скорость:</div>
+                    <input type="range" id="speed" min="1" max="10" value="3">
+                    <div class="value-display" id="speed-value">3</div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button id="start-btn">Старт</button>
+                <button id="stop-btn">Стоп</button>
+                <button id="reset-btn">Сброс</button>
+            </div>
+        </div>
+
+        <div class="animation-area">
+            <div class="center-point"></div>
+            <div id="moving-square">θ=0°</div>
+        </div>
+
+        <div class="info-panel">
+            <div class="coordinates">
+                <div class="coordinate">X: <span id="x-pos">0</span></div>
+                <div class="coordinate">Y: <span id="y-pos">0</span></div>
+                <div class="coordinate">Угол: <span id="angle">0°</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Элементы DOM
+        const radiusSlider = document.getElementById('radius');
+        const speedSlider = document.getElementById('speed');
+        const radiusValue = document.getElementById('radius-value');
+        const speedValue = document.getElementById('speed-value');
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const movingSquare = document.getElementById('moving-square');
+        const xPos = document.getElementById('x-pos');
+        const yPos = document.getElementById('y-pos');
+        const angleDisplay = document.getElementById('angle');
+
+        // Переменные анимации
+        let animationId = null;
+        let angle = 0;
+        let radius = 150;
+        let speed = 3;
+        let isAnimating = false;
+        let trailPoints = [];
+
+        // Обновление отображения значений
+        function updateSliderValues() {
+            radiusValue.textContent = radiusSlider.value + 'px';
+            speedValue.textContent = speedSlider.value;
+        }
+
+        // Функция анимации
+        function animate() {
+            if (!isAnimating) return;
+
+            // Параметрические уравнения круга
+            const centerX = 200; // Центр области анимации
+            const centerY = 200;
+            
+            // Вычисляем координаты
+            const x = centerX + radius * Math.cos(angle);
+            const y = centerY + radius * Math.sin(angle);
+
+            // Обновляем позицию квадрата
+            movingSquare.style.left = (x - 20) + 'px'; // 20 = половина ширины квадрата
+            movingSquare.style.top = (y - 20) + 'px';
+
+            // Обновляем информацию
+            xPos.textContent = Math.round(x - centerX);
+            yPos.textContent = Math.round(centerY - y); // Инвертируем для привычной системы координат
+            angleDisplay.textContent = Math.round(angle * 180 / Math.PI % 360) + '°';
+            movingSquare.textContent = `θ=${Math.round(angle * 180 / Math.PI % 360)}°`;
+
+            // Создаем след
+            createTrailPoint(x, y);
+
+            // Увеличиваем угол
+            angle += speed * 0.02;
+
+            // Запускаем следующий кадр
+            animationId = requestAnimationFrame(animate);
+        }
+
+        // Создание точки следа
+        function createTrailPoint(x, y) {
+            if (trailPoints.length > 100) {
+                const oldPoint = trailPoints.shift();
+                if (oldPoint) oldPoint.remove();
+            }
+
+            const trailPoint = document.createElement('div');
+            trailPoint.className = 'trail';
+            trailPoint.style.left = x + 'px';
+            trailPoint.style.top = y + 'px';
+            
+            document.querySelector('.animation-area').appendChild(trailPoint);
+            trailPoints.push(trailPoint);
+        }
+
+        // Очистка следа
+        function clearTrail() {
+            trailPoints.forEach(point => point.remove());
+            trailPoints = [];
+        }
+
+        // Обработчики событий
+        radiusSlider.addEventListener('input', function() {
+            radius = parseInt(this.value);
+            updateSliderValues();
+        });
+
+        speedSlider.addEventListener('input', function() {
+            speed = parseInt(this.value);
+            updateSliderValues();
+        });
+
+        startBtn.addEventListener('click', function() {
+            if (!isAnimating) {
+                isAnimating = true;
+                animate();
+            }
+        });
+
+        stopBtn.addEventListener('click', function() {
+            isAnimating = false;
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+        });
+
+        resetBtn.addEventListener('click', function() {
+            isAnimating = false;
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            angle = 0;
+            clearTrail();
+            
+            // Возвращаем квадрат в начальную позицию
+            movingSquare.style.left = (200 + radius - 20) + 'px';
+            movingSquare.style.top = (200 - 20) + 'px';
+            
+            xPos.textContent = radius;
+            yPos.textContent = '0';
+            angleDisplay.textContent = '0°';
+            movingSquare.textContent = 'θ=0°';
+        });
+
+        // Инициализация
+        updateSliderValues();
+        
+        // Устанавливаем начальную позицию
+        movingSquare.style.left = (200 + radius - 20) + 'px';
+        movingSquare.style.top = (200 - 20) + 'px';
+    </script>
+</body>
+</html>
